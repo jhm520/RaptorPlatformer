@@ -20,11 +20,12 @@ class Player():
     def __init__(self):
         self.name = "player"
         self.image = pygame.image.load("player.png")
-        self.size = (32,32)
-        self.pos = (512, 512)
+        self.size = [64,64]
+        self.pos = [512, 512]
         self.rect = pygame.Rect(self.pos[0],self.pos[1],self.size[0],self.size[1])
         self.origin = [self.pos[0]+16,self.pos[1]+16]
         self.speed = [0.0,0.0]
+        self.grounded = 0
 
     def draw(self):
         screen.blit(self.image, self.pos)
@@ -39,7 +40,8 @@ class Player():
         
     #move the player
     def move(self):
-        self.speed[1] += .1
+        gravity = .2
+        self.speed[1] += gravity
         self.movePos(self.speed)
         
     #Resolve collisions that have to do with the player
@@ -48,7 +50,12 @@ class Player():
 
         #TODO: Figure out how to do collision detection against platforms
         for object in objects:
-            pass
+            if object.solid:
+                if object.pos[0] <= self.origin[0] <= object.pos[0]+self.size[0]:
+                    pass
+                if object.pos[1] <= self.origin[1] <= object.pos[1]+self.size[1]:
+                    pass
+            
         
 class Object:
     def __init__(self, name, image, size, pos, dynamic=False, solid=False):
@@ -119,14 +126,16 @@ def getInput(): #Get game controls
     if keystate[K_d]:
         player.speed[0] = 10.0
     if not (keystate[K_a] or keystate[K_d]):
-        pass#player.speed[0] = 0.0
+        player.speed[0] = 0.0
     if keystate[K_w]:
-        player.speed[1] = -10.0
+        pass#player.speed[1] = -10.0
     if keystate[K_s]:
-        player.speed[1] = 10.0
+        pass#player.speed[1] = 10.0
+    if keystate[K_SPACE]:
+        player.speed[1] = -5
     if not (keystate[K_w] or keystate[K_s]):
         pass#player.speed[1] = 0.0
-    if mousestate[0] and player1.fired == 0:
+    if mousestate[0]:
         pass
     if not mousestate[0]:
         pass
@@ -153,7 +162,8 @@ player = Player()
 blockImg = pygame.image.load("block.png")
 blocks = []
 for i in range(32):
-    blocks.append(Object("block", blockImg, (32,32), (32*i,screenSize[1]-32), True))
+    if i % 3 == 0:
+        blocks.append(Object("block", blockImg, (32,32), (32*i,screenSize[1]-32), True))
 
 curLvl = Level("main", pygame.image.load("map.png"), blocks)
 
@@ -163,8 +173,9 @@ def main():
     player.speed = [0,1]
     while True:
         getInput()
-        move()
+        #TODO: Collide, then move. Check if object's next position would be a collision
         collide()
+        move()
         draw()
         clock.tick(100)
 
