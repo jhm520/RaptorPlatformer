@@ -3,8 +3,10 @@ import pygame
 class Level(object):
     blank = '.'
     block = '0'
+    player= 'p'
     blockWidth = 75
     blockHeight = 75
+    playerPos = None
     
     def __init__(self, file):
         self.collisionLayer = [row.strip('\n') for row in\

@@ -20,15 +20,17 @@ AXISY = 'y'
 class Entity(object):
     color = (255, 0, 0)
     
-    maxSpeed = 20
-    accel_amt = 1.5
-    airaccel_amt = 1
+    maxSpeed = 10
+    #accel_amt = 1.5
+    #airaccel_amt = 1
+    accel_amt = .5
+    airaccel_amt = .5
     #deaccel_amt = 5
     deaccel_amt = .5
     
     fallAccel = 3.75
     jumpMod = 2.5
-    jumpAccel = 50
+    jumpAccel = 25
     #jumpAccel = 25
     maxFallSpeed = 30
     
@@ -90,11 +92,13 @@ class Entity(object):
         
     def get_accel(self, keys, jumping):
         if not jumping:
-            return (keys[Kright] - keys[Kleft]) * self.accel_amt
+            accelX = (keys[Kright] - keys[Kleft]) * self.accel_amt
         elif jumping:
-            return (keys[Kright] - keys[Kleft]) * self.airaccel_amt
+            accelX = (keys[Kright] - keys[Kleft]) * self.airaccel_amt
+
+        return accelX
             
-    def accelerate(self, accel, speed, onBlock):
+    def accelerate(self, accel, speed, onBlock, jumping=False):
         if accel != 0:
             if ((speed < 0) and (accel > 0)) or\
                ((speed > 0) and (accel < 0)):
@@ -102,10 +106,14 @@ class Entity(object):
             else:
                 speed += accel
 
-        if onBlock:
+
+        #TODO: Figure out how to make player decelerate back to max ground speed
+        if onBlock and not jumping:
             if speed > self.maxSpeed:
+                #speed -= deaccel
                 speed = self.maxSpeed
             if speed < -self.maxSpeed:
+                #speed += deaccel
                 speed = -self.maxSpeed
 
         if accel == 0:
@@ -127,7 +135,7 @@ class Entity(object):
             
         # Gravity is decreased while jumping so the player can control
         # the height of his jump.
-        speed[1] += self.fallAccel #- self.jumpMod
+        speed[1] += self.fallAccel - self.jumpMod
         
         # Simulate terminal velocity
         if speed[1] > self.maxFallSpeed:
@@ -361,10 +369,11 @@ class Player(Entity):
         
         # Calculate movement on X-axis
         self.accelX = self.get_accel(keys, self.jumping)
-        self.speedX = self.accelerate(self.accelX, self.speedX, self.onBlock)
+        self.speedX = self.accelerate(self.accelX, self.speedX, self.onBlock, self.jumping)
         
         # Calculate movement on Y-axis
         self.jumping = keys[Kjump]
+        
         if self.jumping:
             jumpSpeed = self.jump([self.speedX, self.speedY], self.onBlock, keys)
             self.speedX = jumpSpeed[0]
