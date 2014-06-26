@@ -30,7 +30,7 @@ class Entity(object):
     
     fallAccel = 3.75
     jumpMod = 2.5
-    jumpAccel = 25
+    jumpAccel = 50
     #jumpAccel = 25
     maxFallSpeed = 30
     
@@ -99,7 +99,7 @@ class Entity(object):
         return accelX
             
     def accelerate(self, accel, speed, onBlock, jumping=False):
-        if accel != 0:
+        if accel != 0 and onBlock:
             if ((speed < 0) and (accel > 0)) or\
                ((speed > 0) and (accel < 0)):
                 speed += accel
@@ -115,6 +115,7 @@ class Entity(object):
             if speed < -self.maxSpeed:
                 #speed += deaccel
                 speed = -self.maxSpeed
+        
 
         if accel == 0:
             if speed > 0:
@@ -135,7 +136,7 @@ class Entity(object):
             
         # Gravity is decreased while jumping so the player can control
         # the height of his jump.
-        speed[1] += self.fallAccel - self.jumpMod
+        speed[1] += self.fallAccel #- self.jumpMod
         
         # Simulate terminal velocity
         if speed[1] > self.maxFallSpeed:
