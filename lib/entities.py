@@ -162,7 +162,10 @@ class Entity(object):
             
         # Gravity is decreased while jumping so the player can control
         # the height of his jump.
-        speed[1] += self.fallAccel #- self.jumpMod
+        if onWall:
+            speed[1] += self.fallAccel*.5 #- self.jumpMod
+        else:
+            speed[1] += self.fallAccel
         
         # Simulate terminal velocity
         if speed[1] > self.maxFallSpeed:
@@ -172,7 +175,10 @@ class Entity(object):
         return speed
     
     def fall(self, speed):
-        speed += self.fallAccel
+        if self.onWall:
+            speed += self.fallAccel*.5 #- self.jumpMod
+        else:
+            speed += self.fallAccel
         
         # Simulate terminal velocity
         if speed > self.maxFallSpeed:
