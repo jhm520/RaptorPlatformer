@@ -17,20 +17,23 @@ WEST = 'west'
 AXISX = 'x'
 AXISY = 'y'
 
+LEFT = 'left'
+RIGHT = 'right'
+
 class Entity(object):
     color = (255, 0, 0)
     
-    maxSpeed = 10
+    maxSpeed = 15
     #accel_amt = 1.5
     #airaccel_amt = 1
     accel_amt = .5
-    airaccel_amt = .5
+    airaccel_amt = .25
     #deaccel_amt = 5
     deaccel_amt = .5
     
-    fallAccel = 3.75
+    fallAccel = 1
     jumpMod = 2.5
-    jumpAccel = 50
+    jumpAccel = 20
     #jumpAccel = 25
     maxFallSpeed = 30
     
@@ -61,6 +64,7 @@ class Entity(object):
         self.speedY = 0
         self.jumping = False
         self.onBlock = False
+        self.onWall = False
         
     def update(self):
         pass
@@ -90,34 +94,45 @@ class Entity(object):
                 self.currentFrame = 0
         self.image = self.frames[self.currentFrame]
         
-    def get_accel(self, keys, jumping):
-        if not jumping:
+    def get_accel(self, keys, jumping, onBlock, onWall):
+        if onBlock:
             accelX = (keys[Kright] - keys[Kleft]) * self.accel_amt
-        elif jumping:
+        else:
             accelX = (keys[Kright] - keys[Kleft]) * self.airaccel_amt
 
         return accelX
             
-    def accelerate(self, accel, speed, onBlock, jumping=False):
-        if accel != 0 and onBlock:
-            if ((speed < 0) and (accel > 0)) or\
-               ((speed > 0) and (accel < 0)):
+    def accelerate(self, accel, speed, onBlock, onWall, wallSide, jumping=False):
+        if accel != 0:
+            if ((speed < 0) and (accel > 0)):
+                speed += accel
+            elif ((speed > 0) and (accel < 0)):
                 speed += accel
             else:
+                #if onBlock:
                 speed += accel
-
-
+##            if ((speed < 0) and (accel > 0)):
+##                speed += accel
+##            elif ((speed > 0) and (accel < 0)):
+##                speed += accel
+                
         #TODO: Figure out how to make player decelerate back to max ground speed
-        if onBlock and not jumping:
-            if speed > self.maxSpeed:
-                #speed -= deaccel
-                speed = self.maxSpeed
-            if speed < -self.maxSpeed:
-                #speed += deaccel
-                speed = -self.maxSpeed
+        if onBlock or onWall:
+            if jumping:
+                if accel > 0:
+                    speed += 10
+                elif accel < 0:
+                    speed -= 10
+
+        if speed > self.maxSpeed:
+            #speed -= deaccel
+            speed = self.maxSpeed
+        if speed < -self.maxSpeed:
+            #speed += deaccel
+            speed = -self.maxSpeed
         
 
-        if accel == 0:
+        if accel == 0 and onBlock:
             if speed > 0:
                 speed -= self.deaccel_amt
                 if speed < 0:
@@ -129,9 +144,20 @@ class Entity(object):
 
         return speed
         
-    def jump(self, speed, onBlock, keys):
+    def jump(self, speed, onBlock, onWall, wallSide, keys):
         if onBlock:
+            if keys[Kup]:
+                speed[1] -= self.jumpAccel/2
             speed[1] -= self.jumpAccel
+
+        if onWall:
+            if keys[Kup]:
+                if keys[Kright] and not keys[Kleft] and wallSide == LEFT:
+                    speed[1] -= self.jumpAccel/2
+                elif keys[Kleft] and not keys[Kright] and wallSide == RIGHT:
+                    speed[1] -= self.jumpAccel/2
+                
+            
             
             
         # Gravity is decreased while jumping so the player can control
@@ -294,6 +320,32 @@ class Entity(object):
                         return True
         return False
 
+    def check_on_wall(self, rect, level):
+        for x in range(level.levelWidth):
+            for y in range(level.levelHeight):
+                if level.collisionLayer[y][x] == level.blank:
+                    continue
+                elif level.collisionLayer[y][x] == level.block:
+                    tempCheckRect = copy.copy(rect)
+                    tempLevelRect = pygame.Rect(x*level.blockWidth, 
+                                                y*level.blockHeight, 
+                                                level.blockWidth, level.blockHeight)
+                    tempCheckRect.left -= 1
+                    #tempCheckRect.right += 1
+                    if tempLevelRect.colliderect(tempCheckRect):
+                        return [True, LEFT]
+
+                    tempCheckRect.left += 1
+                    
+                    tempCheckRect.right += 1
+
+                    if tempLevelRect.colliderect(tempCheckRect):
+                        return [True, RIGHT]
+
+                    tempCheckRect.right -= 1
+                    
+        return [False, False]
+
     def check_head_collision(self, level):
         '''
         Checks the current player's original bounding rectangle to see if standing up
@@ -349,6 +401,8 @@ class Player(Entity):
         # disable midair crouching by only allowing crouching while on the ground
         # similar to how the mario series handles this
         self.onBlock = self.check_on_block(self.rect, level)
+        [self.onWall, self.wallSide] = self.check_on_wall(self.rect, level)
+        
         # Crouch the player if needed
         if keys[Kcrouch] and not self.crouching and self.onBlock:
             self.crouching = True
@@ -367,16 +421,18 @@ class Player(Entity):
         # Update the player's image to the new rect size
         self.image = pygame.Surface((self.rect.width, self.rect.height))
         self.image.fill(self.color)
-        
-        # Calculate movement on X-axis
-        self.accelX = self.get_accel(keys, self.jumping)
-        self.speedX = self.accelerate(self.accelX, self.speedX, self.onBlock, self.jumping)
-        
+
         # Calculate movement on Y-axis
         self.jumping = keys[Kjump]
         
+        # Calculate movement on X-axis
+        self.accelX = self.get_accel(keys, self.jumping, self.onBlock, self.onWall)
+        self.speedX = self.accelerate(self.accelX, self.speedX, self.onBlock, self.onWall, self.wallSide, self.jumping)
+        
+        
+        
         if self.jumping:
-            jumpSpeed = self.jump([self.speedX, self.speedY], self.onBlock, keys)
+            jumpSpeed = self.jump([self.speedX, self.speedY], self.onBlock, self.onWall, self.wallSide, keys)
             self.speedX = jumpSpeed[0]
             self.speedY = jumpSpeed[1]
             #self.speedY = self.jump(self.speedY, self.onBlock)
