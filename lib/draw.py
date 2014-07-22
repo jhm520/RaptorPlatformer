@@ -60,5 +60,12 @@ def draw_level(surface, level, camera):
 # This function is needed to draw a rect within the camera 
 def draw_entities(surface, sprites, camera):
     for sprite in sprites:
-        surface.blit(sprite.image, (sprite.rect.left - camera.left, 
-                                    sprite.rect.top - camera.top))
+        #surface.blit(sprite.image, (sprite.rect.left - camera.left, 
+                                    #sprite.rect.top - camera.top))
+        
+        if sprite.onWall and sprite.rot == 90:
+            imgpos = (sprite.rect.left - camera.left - 30, sprite.rect.top - camera.top)
+        else:
+            imgpos = (sprite.rect.left - camera.left, sprite.rect.top - camera.top)
+        surface.blit(pygame.transform.rotate(sprite.image, sprite.rot),
+                     imgpos)

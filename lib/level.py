@@ -6,7 +6,6 @@ class Level(object):
     player= 'p'
     blockWidth = 75
     blockHeight = 75
-    playerPos = None
     
     def __init__(self, file):
         self.collisionLayer = [row.strip('\n') for row in\
@@ -18,6 +17,7 @@ class Level(object):
         self.topEdge = 0
         self.rightEdge = self.levelWidth * self.blockWidth
         self.bottomEdge = self.levelHeight * self.blockHeight
+                    
         
         
         self.blockSurf = pygame.Surface((self.blockWidth, self.blockHeight))
