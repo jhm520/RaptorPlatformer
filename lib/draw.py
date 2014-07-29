@@ -51,6 +51,9 @@ def draw_level(surface, level, camera):
                     surface.blit(level.blockSurf,
                                  ((x*level.blockWidth) - camera.left, 
                                  (y*level.blockHeight) - camera.top,))
+                elif level.collisionLayer[y][x] == level.wall:
+                    surface.blit(level.wallSurf, ((x*level.blockWidth) - camera.left, 
+                                 (y*level.blockHeight) - camera.top,))
                     #pygame.draw.rect(surface, BLOCK_COLOR, 
                     #((x*level.blockWidth) - camera.left, 
                      #(y*level.blockHeight) - camera.top, 
@@ -63,7 +66,7 @@ def draw_entities(surface, sprites, camera):
         #surface.blit(sprite.image, (sprite.rect.left - camera.left, 
                                     #sprite.rect.top - camera.top))
         
-        if sprite.onWall and sprite.rot == 90:
+        if sprite.rot == 90:
             imgpos = (sprite.rect.left - camera.left - 30, sprite.rect.top - camera.top)
         else:
             imgpos = (sprite.rect.left - camera.left, sprite.rect.top - camera.top)

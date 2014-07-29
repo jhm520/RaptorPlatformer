@@ -8,7 +8,7 @@ import pygame
 from pygame.locals import *
 pygame.init()
 
-import sys
+import sys 
 import time
 
 from lib import (entities, 
@@ -34,7 +34,7 @@ class main():
         
         # Set up objects
         self.currentLevel = level.Level("lib\\level_1.lvl")
-        self.player = entities.Player(self.currentLevel, (30, 16, 60, 90))
+        self.player = entities.Player(self.currentLevel)
         
         # original speed settings for 30 FPS
         if self.FPS == 30:

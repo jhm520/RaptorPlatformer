@@ -1,7 +1,8 @@
 import pygame
 
 class Level(object):
-    blank = '.'
+    blank = ' '
+    wall = '='
     block = '0'
     player= 'p'
     blockWidth = 75
@@ -21,4 +22,16 @@ class Level(object):
         
         
         self.blockSurf = pygame.Surface((self.blockWidth, self.blockHeight))
+        
+
         self.blockSurf.fill((255,255,255))
+
+        self.wallSurf = pygame.Surface((self.blockWidth, self.blockHeight))
+        self.wallSurf.fill((127,127,127))
+
+        self.playerPos = (30, 16, 60, 90)
+
+        for y in range (self.levelHeight):
+            for x in range (self.levelWidth):
+                if self.collisionLayer[y][x] == "p":
+                    self.playerPos = (x*self.blockWidth, y*self.blockHeight, 60, 90)
